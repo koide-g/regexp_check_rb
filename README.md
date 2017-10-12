@@ -1,0 +1,8 @@
+# regexpテスト
+
+
+minitestでテスト
+
+## usage
+
+`$ rake`
