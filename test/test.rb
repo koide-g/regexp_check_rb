@@ -1,70 +1,91 @@
 require 'minitest/autorun'
 
+
 class TestString < Minitest::Test
   def setup
-    @unsafe_pattern = /^[\.[:space:]]|[[:cntrl:][[:space:]&&[^\u0020\u3000]]"#\$%\&'\*,\/:;<=>\?\[\\\]\^`\{\|\}~]|[[:space:]]$|^$/
+    @forbidden_start_pattern = /^[\.[:space:]]/
+    @forbidden_anywhere_pattern = /[[:cntrl:][[:space:]&&[^\u0020\u3000]]"#\$%\&'\*,\/:;<=>\?\[\\\]\^`\{\|\}~]/
+    @forbidden_last_pattern = /[[:space:]]$/
+    @forbidden_empty_pattern = /^$/
   end
 
-  def test_forbidden_char
-    assert(".dot" =~ @unsafe_pattern, "先頭の.はNG")
-    assert_nil("abc.d1234" =~ @unsafe_pattern, "文中の.はOK")
-    assert("$1234" =~ @unsafe_pattern, "$はどこでもNG")
-    assert("100%ok" =~ @unsafe_pattern, "%はどこでもNG")
-    assert("M&M" =~ @unsafe_pattern, "&はどこでもNG")
-    assert("#hello" =~ @unsafe_pattern, "#はどこでもNG")
+  def test_forbidden_start_pattern
+    assert(".dot" =~ @forbidden_start_pattern, "先頭の.はNG")
+    assert("\x20dot" =~ @forbidden_start_pattern, "先頭の半角スペースはNG")
+    assert("\u3000dot" =~ @forbidden_start_pattern, "先頭の全角スペースはNG") # JSだと許容
+    assert("\tdot" =~ @forbidden_start_pattern, "先頭のwhitespaceはNG")
+    assert("\rdot" =~ @forbidden_start_pattern, "先頭のwhitespaceはNG")
+    assert("\ndot" =~ @forbidden_start_pattern, "先頭のwhitespaceはNG")
+    assert("\vdot" =~ @forbidden_start_pattern, "先頭のwhitespaceはNG")
+    assert("\fdot" =~ @forbidden_start_pattern, "先頭のwhitespaceはNG")
+  end
+
+  def test_forbidden_last_pattern
+    assert("dot\x20" =~ @forbidden_last_pattern, "末尾の半角スペースはNG")
+    assert("dot\u3000" =~ @forbidden_last_pattern, "末尾の全角スペースはNG") # JSだと許容
+    assert("dot\t" =~ @forbidden_last_pattern, "末尾のwhitespaceはNG")
+    assert("dot\r" =~ @forbidden_last_pattern, "末尾のwhitespaceはNG")
+    assert("dot\n" =~ @forbidden_last_pattern, "末尾のwhitespaceはNG")
+    assert("dot\v" =~ @forbidden_last_pattern, "末尾のwhitespaceはNG")
+    assert("dot\f" =~ @forbidden_last_pattern, "末尾のwhitespaceはNG")
   end
 
   def test_zen_kana
-    assert_nil(@unsafe_pattern =~ "フォルダ", "全角カナはOK")
-    assert_nil(@unsafe_pattern =~ "フ゜ロシ゛ェクト", "全角カナはOK")
-    assert_nil(@unsafe_pattern =~ "ふぉるだ", "全角ひらがなはOK")
-    assert_nil(@unsafe_pattern =~ "ふぉるた゛", "全角ひらがなはOK")
+    assert_nil(@forbidden_anywhere_pattern =~ "フォルダ", "全角カナはOK")
+    assert_nil(@forbidden_anywhere_pattern =~ "フ゜ロシ゛ェクト", "全角カナはOK")
+    assert_nil(@forbidden_anywhere_pattern =~ "ふぉるだ", "全角ひらがなはOK")
+    assert_nil(@forbidden_anywhere_pattern =~ "ふぉるた゛", "全角ひらがなはOK")
   end
 
   def test_han_kana
-    assert(@unsafe_pattern =~ "ﾌｫﾙﾀﾞ", "半角カナはNG")
+    assert_nil(@forbidden_anywhere_pattern =~ "ﾌｫﾙﾀﾞ", "半角カナはNG")
   end
 
   def kanji
     # //   吉
     # // CJK UNIFIED IDEOGRAPH-5409
     # // Unicode: U+5409, UTF-8: E5 90 89
-    assert_nil(@unsafe_pattern =~ "\u5409野屋", "漢字はOK")
+    assert_nil(@forbidden_anywhere_pattern =~ "\u5409野屋", "漢字はOK")
     # // 𠮷
     # // CJK UNIFIED IDEOGRAPH-20BB7
     # // Unicode: U+20BB7, UTF-8: F0 A0 AE B7
-    assert_nil(@unsafe_pattern =~ "\u{20BB7}野屋", "漢字サロゲートペアはOK")
+    assert_nil(@forbidden_anywhere_pattern =~ "\u{20BB7}野屋", "漢字サロゲートペアはOK")
   end
 
   def test_emoji
-    assert_nil(@unsafe_pattern =~ "❤️", "絵文字はOK")
-    assert_nil(@unsafe_pattern =~ "😄", "絵文字はOK")
-    assert_nil(@unsafe_pattern =~ "💇🏻", "絵文字＋スキントーンはOK")
-    assert(@unsafe_pattern =~ ".😓")
+    assert_nil(@forbidden_anywhere_pattern =~ "❤️", "絵文字はOK")
+    assert_nil(@forbidden_anywhere_pattern =~ "😄", "絵文字はOK")
+    assert_nil(@forbidden_anywhere_pattern =~ "💇🏻", "絵文字＋スキントーンはOK")
   end
 
   def test_greek
-    assert_nil("α" =~ @unsafe_pattern, "ギリシャ語はOK")
-    assert_nil("β" =~ @unsafe_pattern, "ギリシャ語はOK")
-    assert_nil("η" =~ @unsafe_pattern, "ギリシャ語はOK")
-    assert_nil("λ" =~ @unsafe_pattern, "ギリシャ語はOK")
+    assert_nil("α" =~ @forbidden_anywhere_pattern, "ギリシャ語はOK")
+    assert_nil("β" =~ @forbidden_anywhere_pattern, "ギリシャ語はOK")
+    assert_nil("η" =~ @forbidden_anywhere_pattern, "ギリシャ語はOK")
+    assert_nil("λ" =~ @forbidden_anywhere_pattern, "ギリシャ語はOK")
   end
 
-  def test_zen_space
-    assert(@unsafe_pattern =~ "　こんにちは", "先頭の全角スペースはOK")
-    assert_nil(@unsafe_pattern =~ "こんに　ちは", "文中の全角スペースはOK")
+  def test_zen_space?
+    assert_nil(@forbidden_anywhere_pattern =~ "こんに　ちは", "文中の全角スペースはOK")
   end
 
-  def test_han_space
-    assert(@unsafe_pattern =~ " test", "先頭の半角スペースはNG")
-    assert_nil(@unsafe_pattern =~ "test test", "文中の半角スペースはOK")
+  def test_han_space?
+    assert_nil(@forbidden_anywhere_pattern =~ "test test", "文中の半角スペースはOK")
   end
 
-  def test_meta_char
-    assert("\t" =~ @unsafe_pattern, "制御文字はNG")
-    assert("\r" =~ @unsafe_pattern, "制御文字はNG")
-    assert("\n" =~ @unsafe_pattern, "制御文字はNG")
-    assert("\b" =~ @unsafe_pattern, "制御文字はNG")
+  def test_filesystem_char?
+    assert(@forbidden_anywhere_pattern =~ "\"#\$%\&'\*,\/:;<=>\?\[\\\]\^`\{\|\}~", "ファイルシステムで使われる文字はNG")
+  end
+
+  def test_meta_char?
+    # \x00-\x1F\x7F
+    assert("\x00" =~ @forbidden_anywhere_pattern, "制御文字はNG") # JSだと許容
+    assert("\x1F" =~ @forbidden_anywhere_pattern, "制御文字はNG") # JSだと許容
+    assert("\x7F" =~ @forbidden_anywhere_pattern, "制御文字はNG") # JSだと許容
+  end
+
+  def test_empty_char?
+    assert("" =~ @forbidden_empty_pattern, "空文字はNG")
   end
 
 end
