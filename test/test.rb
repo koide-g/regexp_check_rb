@@ -14,7 +14,7 @@ class TestString < Minitest::Test
   def test_forbidden_start_pattern
     assert(".dot" =~ @forbidden_start_pattern, "先頭の.はNG")
     assert("\x20dot" =~ @forbidden_start_pattern, "先頭の半角スペースはNG")
-    assert("\u3000dot" =~ @forbidden_start_pattern, "先頭の全角スペースはNG") # JSだと許容
+    assert("\u3000dot" =~ @forbidden_start_pattern, "先頭の全角スペースはNG") # JSだとプロジェクト名では許容
     assert("\tdot" =~ @forbidden_start_pattern, "先頭のwhitespaceはNG")
     assert("\rdot" =~ @forbidden_start_pattern, "先頭のwhitespaceはNG")
     assert("\ndot" =~ @forbidden_start_pattern, "先頭のwhitespaceはNG")
@@ -24,7 +24,7 @@ class TestString < Minitest::Test
 
   def test_forbidden_last_pattern
     assert("dot\x20" =~ @forbidden_last_pattern, "末尾の半角スペースはNG")
-    assert("dot\u3000" =~ @forbidden_last_pattern, "末尾の全角スペースはNG") # JSだと許容
+    assert("dot\u3000" =~ @forbidden_last_pattern, "末尾の全角スペースはNG") # JSだとプロジェクト名では許容
     assert("dot\t" =~ @forbidden_last_pattern, "末尾のwhitespaceはNG")
     assert("dot\r" =~ @forbidden_last_pattern, "末尾のwhitespaceはNG")
     assert("dot\n" =~ @forbidden_last_pattern, "末尾のwhitespaceはNG")
@@ -83,9 +83,9 @@ class TestString < Minitest::Test
 
   def test_meta_char?
     # \x00-\x1F\x7F
-    assert("\x00" =~ @forbidden_anywhere_pattern, "制御文字はNG") # JSだと許容
-    assert("\x1F" =~ @forbidden_anywhere_pattern, "制御文字はNG") # JSだと許容
-    assert("\x7F" =~ @forbidden_anywhere_pattern, "制御文字はNG") # JSだと許容
+    assert("\x00" =~ @forbidden_anywhere_pattern, "制御文字はNG")
+    assert("\x1F" =~ @forbidden_anywhere_pattern, "制御文字はNG")
+    assert("\x7F" =~ @forbidden_anywhere_pattern, "制御文字はNG")
   end
 
   def test_empty_char?
