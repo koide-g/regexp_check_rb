@@ -68,13 +68,13 @@ class TestString < Minitest::Test
   end
 
   def test_zen_space?
-    assert_nil(@forbidden_anywhere_pattern =~ "こんに　ちは", "Project:文中の全角スペースはOK")
-    assert(@forbidden_anywhere_pattern_file =~ "こんに　ちは", "File/Folder:文中の全角スペースはNG")
+    assert_nil(@forbidden_anywhere_pattern =~ "　", "Project:文中の全角スペースはOK")
+    assert(@forbidden_anywhere_pattern_file =~ "　", "File/Folder:文中の全角スペースはNG")
   end
 
   def test_han_space?
-    assert_nil(@forbidden_anywhere_pattern =~ "test test", "Project:文中の半角スペースはOK")
-    assert(@forbidden_anywhere_pattern_file =~ "test test", "File/Folder:文中の半角スペースはNG")
+    assert_nil(@forbidden_anywhere_pattern =~ " ", "Project:文中の半角スペースはOK")
+    assert(@forbidden_anywhere_pattern_file =~ " ", "File/Folder:文中の半角スペースはNG")
   end
 
   def test_filesystem_char?
