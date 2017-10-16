@@ -5,6 +5,8 @@ class TestString < Minitest::Test
   def setup
     @forbidden_start_pattern = /^[\.[:space:]]/
     @forbidden_anywhere_pattern = /[[:cntrl:][[:space:]&&[^\u0020\u3000]]"#\$%\&'\*,\/:;<=>\?\[\\\]\^`\{\|\}~]/
+    # file/folderはスペース類禁止
+    @forbidden_anywhere_pattern_file = /[[:cntrl:][:space:]"#\$%\&'\*,\/:;<=>\?\[\\\]\^`\{\|\}~]/
     @forbidden_last_pattern = /[[:space:]]$/
     @forbidden_empty_pattern = /^$/
   end
@@ -38,7 +40,7 @@ class TestString < Minitest::Test
   end
 
   def test_han_kana
-    assert_nil(@forbidden_anywhere_pattern =~ "ﾌｫﾙﾀﾞ", "半角カナはNG")
+    assert_nil(@forbidden_anywhere_pattern =~ "ﾌｫﾙﾀﾞ", "半角カナはOK")
   end
 
   def kanji
@@ -66,11 +68,13 @@ class TestString < Minitest::Test
   end
 
   def test_zen_space?
-    assert_nil(@forbidden_anywhere_pattern =~ "こんに　ちは", "文中の全角スペースはOK")
+    assert_nil(@forbidden_anywhere_pattern =~ "こんに　ちは", "Project:文中の全角スペースはOK")
+    assert(@forbidden_anywhere_pattern_file =~ "こんに　ちは", "File/Folder:文中の全角スペースはNG")
   end
 
   def test_han_space?
-    assert_nil(@forbidden_anywhere_pattern =~ "test test", "文中の半角スペースはOK")
+    assert_nil(@forbidden_anywhere_pattern =~ "test test", "Project:文中の半角スペースはOK")
+    assert(@forbidden_anywhere_pattern_file =~ "test test", "File/Folder:文中の半角スペースはNG")
   end
 
   def test_filesystem_char?
