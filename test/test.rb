@@ -4,11 +4,12 @@ require 'minitest/autorun'
 class TestString < Minitest::Test
   def setup
     @forbidden_start_pattern = /^[\.[:space:]]/
-    @forbidden_anywhere_pattern = /[[:cntrl:][[:space:]&&[^\u0020\u3000]]"#\$%\&'\*,\/:;<=>\?\[\\\]\^`\{\|\}~]/
+    @forbidden_anywhere_pattern = /[[:cntrl:][:space:]"#\$%\&'\*,\/:;<=>\?\[\\\]\^`\{\|\}~]/
     # file/folderはスペース類禁止
     @forbidden_anywhere_pattern_file = /[[:cntrl:][:space:]"#\$%\&'\*,\/:;<=>\?\[\\\]\^`\{\|\}~]/
     @forbidden_last_pattern = /[[:space:]]$/
     @forbidden_empty_pattern = /^$/
+    @forbidden_windows_reserved_pattern = /^(?:CON|PRN|AUX|NUL|COM\d|LPT\d)(?:\.|$)/i
   end
 
   def test_forbidden_start_pattern
@@ -68,12 +69,12 @@ class TestString < Minitest::Test
   end
 
   def test_zen_space?
-    assert_nil(@forbidden_anywhere_pattern =~ "　", "Project:文中の全角スペースはOK")
+    assert(@forbidden_anywhere_pattern =~ "　", "Project:文中の全角スペースはNG")
     assert(@forbidden_anywhere_pattern_file =~ "　", "File/Folder:文中の全角スペースはNG")
   end
 
   def test_han_space?
-    assert_nil(@forbidden_anywhere_pattern =~ " ", "Project:文中の半角スペースはOK")
+    assert(@forbidden_anywhere_pattern =~ " ", "Project:文中の半角スペースはNG")
     assert(@forbidden_anywhere_pattern_file =~ " ", "File/Folder:文中の半角スペースはNG")
   end
 
@@ -90,6 +91,15 @@ class TestString < Minitest::Test
 
   def test_empty_char?
     assert("" =~ @forbidden_empty_pattern, "空文字はNG")
+  end
+
+  def test_endwith_windows_forbidden_pattern?
+    assert("CON" =~ @forbidden_windows_reserved_pattern, "Windowsの予約名なのでNG")
+    assert("PRN." =~ @forbidden_windows_reserved_pattern, "Windowsの予約名なのでNG")
+    assert("AUX" =~ @forbidden_windows_reserved_pattern, "Windowsの予約名なのでNG")
+    assert("NUL" =~ @forbidden_windows_reserved_pattern, "Windowsの予約名なのでNG")
+    assert("COM0" =~ @forbidden_windows_reserved_pattern, "Windowsの予約名なのでNG")
+    assert("LPT3." =~ @forbidden_windows_reserved_pattern, "Windowsの予約名なのでNG")
   end
 
 end
